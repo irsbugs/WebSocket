@@ -1,6 +1,6 @@
 # WebSocket
 
-WebSocket server. Based on Lawrence D'Oliveiro prime factor calculator.
+WebSocket server. Based on [Lawrence D'Oliveiro](https://github.com/ldo) prime factor calculator.
 
 [Uvicorn](https://www.uvicorn.org/) is an Asynchronous Server Gateway Interface [ASGI](https://asgi.readthedocs.io/en/latest/) web server implementation for Python.
 
