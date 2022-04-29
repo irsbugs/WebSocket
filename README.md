@@ -11,6 +11,7 @@ Uvicorn currently supports HTTP/1.1 and WebSockets.
 Depending on your distro, the following dependencies may need installing as follows...
 ```
 sudo apt install uvicorn python3-uvicorn python3-uvloop python3-httptools
+```
 
 This repository includes the files page_02.html and server_02.py. Copy these files to a local directory. Use a console terminal to launch the server with the command...
 ```
