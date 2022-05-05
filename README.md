@@ -32,5 +32,8 @@ The server calculates Weight, Remaining fuel, acceleration and altitude and alon
 
 The files `page_3.html` and `server_3.py` in conjunction with two music files `music_6secs.ogg` and `music_11secs.ogg` provide a rocket launch with music. The launch information is passing *text* between the server and the client, while the music is passes as *bytes*.
 
-
+Use a console terminal to launch the server with the command...
+```
+uvicorn --port 9370 server_3:rocket
+```
 
