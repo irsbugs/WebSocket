@@ -1,0 +1,143 @@
+<!DOCTYPE HTML>
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="content-type" CONTENT="text/html; charset=utf-8">
+<TITLE>Rocket</TITLE>
+</HEAD>
+<BODY>
+<H3>WebSocket protocol via Asynchronous Server Gateway Interface ~ ASGI</H3>
+<STRONG> ...it's like Rocket Science...</STRONG>
+<P>Run the accompanying <TT>server_2.py</TT> with a Uvicorn command like this:
+<BLOCKQUOTE>
+<TT>uvicorn --port 9370 server_2:rocket</TT>
+</BLOCKQUOTE>
+<SCRIPT>
+"use strict"
+/* WebSocket JS spec used to be <https://html.spec.whatwg.org/#network>,
+    now <https://websockets.spec.whatwg.org/>
+*/
+
+let conn
+
+function countdown()
+  {
+    const form = document.forms["form"]
+    conn = new WebSocket("ws://127.0.0.1:9370/rocket")
+      /* actually path part of URL is ignored by my Python code */
+    conn.onopen =
+        function ()
+          {
+            document.getElementById("message").innerHTML = ""
+
+            /* Concatinate data with comma delimiter.                     
+               A Javascript array builds a comma delimited string of data  
+               Send the button value and the values from Radio button selections */      
+            const button_array = new Array(
+                    form.elements["button"].value, 
+                    form.elements["weight"].value,
+                    form.elements["thrust"].value,
+                    form.elements["fuel"].value,
+                    form.elements["burn"].value)                                                           
+            conn.send(button_array)
+                                                                                   
+          } /*function*/
+          
+    conn.onmessage =
+        function (event)
+        /* The message from the server is comma delimited string */
+          {             
+            var event_list = event.data.split(",")
+            
+            document.getElementById("event_data").innerHTML = event_list
+            document.getElementById("event_data").innerHTML = ("<STRONG>" +
+                    "Total Weight: " + event_list[2] + "kg" +
+                    "<P>Remaining Fuel Weight: " + event_list[1] + "kg" +
+                    "<P>Acceleration: " + event_list[3] + "m/s²" +   
+                    "<P>Altitude: " + event_list[4] + "m" + "</STRONG>")
+                                                  
+            /* Display seconds count */
+            document.getElementById("seconds").innerHTML = event_list[0]
+            
+            /* Show progress bar in pre-launch countdown phase */
+            if (event_list[0] < 1)
+              { 
+                document.getElementById("progress").style.display = "block"         
+                document.getElementById("progress").value = Math.abs(event_list[0])
+              }  
+            else /* hide the progress bar once countdown reaches zero. */
+              {
+                document.getElementById("progress").style.display = "none"
+              } /*if*/         
+          } /*function*/
+          
+    conn.onclose =
+        function (event)
+          {
+            document.getElementById("seconds").innerHTML = "End of mission"
+            if (event.code != 1000)
+              {
+                document.getElementById("message").innerHTML = "Terminated with code: " + event.code
+              }/*if*/
+          } /*function*/
+    /* conn.onerror = Sould there be a function for connection error??? */      
+  } /*countdown*/
+ 
+function terminate() 
+  {
+  // TODO: Somehow stop the countdown() function ???
+  }
+    
+</SCRIPT>
+<FORM NAME="form">
+
+<H3>Rocket Net Weight (Kilograms):</H3>
+<INPUT TYPE="RADIO" ID="R_A_1" NAME="weight" VALUE="100" CHECKED="true">
+<LABEL FOR="R_A_1">100 kg</LABEL>
+<INPUT TYPE="RADIO" ID="R_A_2" NAME="weight" VALUE="200">
+<LABEL FOR="R_A_2">200 kg</LABEL>
+<INPUT TYPE="RADIO" ID="R_A_3" NAME="weight" VALUE="400">
+<LABEL FOR="R_A_3">400 kg</LABEL><BR><BR>
+  
+<H3>Engine Thrust (Newtons):</H3>
+<INPUT TYPE="RADIO" ID="R_B_1" NAME="thrust" VALUE="10000" CHECKED="true">
+<LABEL FOR="R_B_1">10000 N</LABEL>
+<INPUT TYPE="RADIO" ID="R_B_2" NAME="thrust" VALUE="20000">
+<LABEL FOR="R_B_2">20000 N</LABEL>
+<INPUT TYPE="RADIO" ID="R_B_3" NAME="thrust" VALUE="40000">
+<LABEL FOR="R_B_3"> 40000 N</LABEL><BR><BR>
+
+<p><H3>Initial Fuel Weight (Kilograms):</H3></p>
+<INPUT TYPE="RADIO" ID="R_C_1" NAME="fuel" VALUE="1000" CHECKED="true">
+<LABEL FOR="R_C_1">1000 Kg</LABEL>
+<INPUT TYPE="RADIO" ID="R_C_2" NAME="fuel" VALUE="2000">
+<LABEL FOR="R_C_2">2000 Kg</LABEL>
+<INPUT TYPE="RADIO" ID="R_C_3" NAME="fuel" VALUE="4000">
+<LABEL FOR="R_C_3"> 4000 Kg</LABEL><BR><BR>
+
+<p><H3>Burn Rate (Kilograms per second):</H3></p>
+<INPUT TYPE="RADIO" ID="R_D_1" NAME="burn" VALUE="100" CHECKED="true">
+<LABEL FOR="R_D_1">100 Kg/s</LABEL>
+<INPUT TYPE="RADIO" ID="R_D_2" NAME="burn" VALUE="200">
+<LABEL FOR="R_D_2">200 Kg/s</LABEL>
+<INPUT TYPE="RADIO" ID="R_D_3" NAME="burn" VALUE="400">
+<LABEL FOR="R_D_3"> 400 Kg/s</LABEL><BR><BR>
+
+
+<H3>Mission Control Important button No. 1: 
+<INPUT TYPE="BUTTON" ONCLICK="countdown()" VALUE="Launch Rocket" NAME="button" 
+STYLE="font-size:20px; background-color:green; color:white; border-color:navy;">
+</H3>
+
+<P><PROGRESS ID="progress" VALUE="0" MAX="5"></P>
+<H2>Launch Counter: <SPAN ID="seconds"</SPAN></H2>
+
+<P><SPAN ID="event_data">(Event data will appear here.)</SPAN>
+<P><SPAN ID="message"></SPAN>
+
+<!-- <H3>Mission Control Important button No. 2: 
+<INPUT TYPE="BUTTON" ONCLICK="terminate()" VALUE="Terminate" NAME="button2" 
+STYLE="font-size:20px; background-color:red; color:white; border-color:darkred;">
+</H3> -->
+</FORM>
+</BODY>
+</HTML>
