@@ -20,7 +20,7 @@ This repository includes the files `page_2.html` and `server_2.py`. Copy these f
 uvicorn --port 9370 server_2:rocket
 ```
 
-In a browser tab open the file page_02.html. 
+In a browser tab open the file `page_2.html`. 
 
 The browser will now interact with the server to simulate launching a rocket.
 
@@ -30,7 +30,7 @@ The server calculates Weight, Remaining fuel, acceleration and altitude and alon
 
 ## Rocket Launch with music
 
-The files `page_3.html` and `server_3.py` in conjunction with two music files `music_6secs.ogg` and `music_11secs.ogg` provide a rocket launch with music. The lauch information is passing *text* between the server and the client, while the music is passes as *bytes*
+The files `page_3.html` and `server_3.py` in conjunction with two music files `music_6secs.ogg` and `music_11secs.ogg` provide a rocket launch with music. The launch information is passing *text* between the server and the client, while the music is passes as *bytes*.
 
 
 
