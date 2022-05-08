@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+ <head> 
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" /> 
+  <title>Rocket</title> 
+ </head> 
+ <body> 
+  <script>
+"use strict"
+
+/* WebSocket JS spec used to be <https://html.spec.whatwg.org/#network>,
+    now <https://websockets.spec.whatwg.org/>
+    
+   Working with images see: 
+   https://medium.com/swlh/javascript-working-with-images-c303ab4bd3df 
+
+   Make HTML and Javascript pretty with: https://www.prettifier.net/html/
+*/
+
+let conn
+
+function countdown() {
+    const form = document.forms["form"]
+    conn = new WebSocket("ws://127.0.0.1:9370/rocket")
+        /* actually path part of URL is ignored by my Python code */
+    conn.onopen =
+        function() {
+            document.getElementById("message").innerHTML = ""
+
+            /* Concatinate data with comma delimiter.                     
+               A Javascript array builds a comma delimited string of data  
+               Send the button value and the values from Radio button selections 
+               would join() work? */
+            const button_array = new Array(
+                form.elements["button"].value,
+                form.elements["weight"].value,
+                form.elements["thrust"].value,
+                form.elements["fuel"].value,
+                form.elements["burn"].value)
+            conn.send(button_array)
+
+        } /*function*/
+
+    conn.onmessage =
+        function(event) {
+            var event_data = event.data
+            console.log("event_data is:" + event_data + " Size:" + event_data.size +
+                " Type:" + event_data.type)
+
+            if (event_data == "[object Blob]") {
+
+                if (event_data.size == 14810) //rocket no flame
+                {
+                    console.log("Rocket detected")
+                    let reader = new FileReader();
+                    reader.readAsDataURL(event_data);
+                    reader.onload = function() {
+                        //onload function. output URL of scheme data to src.  
+                        //console.log(reader.result) // data:application/octet-stream;base64,iVBO...
+                        const img = document.querySelectorAll("img");
+                        img[0].style.position = "absolute";
+                        img[0].style.top = "500px";
+                        img[0].style.left = "700px";
+                        img[0].style.visibility = "visible";
+                        img[0].src = reader.result
+                    };
+                }
+                // event_data is:[object Blob] Size:14992 Type:      
+                else if (event_data.size == 14992) //rocket with flame
+                {
+                    console.log("Rocket detected")
+                    let reader = new FileReader();
+                    reader.readAsDataURL(event_data);
+                    reader.onload = function() {
+                        //onload function. Set style and output URL of scheme data to src.  
+                        //console.log(reader.result)  // data:application/octet-stream;base64,iVBO...
+                        const img = document.querySelectorAll("img");
+                        img[1].style.position = "absolute";
+                        img[1].style.top = "500px";
+                        img[1].style.left = "700px";
+                        img[1].style.visibility = "hidden";
+                        img[1].src = reader.result
+                    };
+                }
+
+                /* The message from the server is a binary blob of .ogg music. */
+                else {
+                    console.log("Music detected")
+                    let reader = new FileReader();
+                    reader.readAsDataURL(event_data); // converts the blob to base64 and calls onload
+
+                    /* Function to place base64 music into Audio player */
+                    reader.onload = function() {
+                        let music = new Audio(reader.result);
+                        music.play();
+                    };
+                }
+            } else if (event == "[object MessageEvent]") {
+                /* The message from the server is comma delimited string */
+                /* event_data is:-5,1000,1100,0.00,0.00 Size:undefined Type:undefined */
+
+                /* Split the 5 fields of data into a list and get HTML to display */
+                var event_list = new Array();
+                event_list = event_data.split(",")
+                document.getElementById("event_info").innerHTML = ("<STRONG>" +
+                    "Total Weight: " + event_list[2] + "kg" +
+                    "<P>Remaining Fuel Weight: " + event_list[1] + "kg" +
+                    "<P>Acceleration: " + event_list[3] + "m/s²" +
+                    "<P>Altitude: " + event_list[4] + "m" + "</STRONG>")
+
+                /* Display seconds count */
+                document.getElementById("seconds").innerHTML = event_list[0]
+
+                /* Show progress bar in pre-launch countdown phase */
+                if (event_list[0] < 1) {
+                    document.getElementById("progress").style.visibility = "visible"
+                    document.getElementById("progress").value = Math.abs(event_list[0])
+                } else /* hide the progress bar once countdown reaches zero. */ {
+                    document.getElementById("progress").style.visibility = "hidden"
+                } /*if*/
+
+
+                if (event_list[0] < 0) // Countdown in pre-launch phase
+                {
+                    /* Display rocket without flame. On the launch pad */
+                    const img = document.querySelectorAll("img");
+                    img[0].style.position = "absolute";
+                    // Offset is 500px to sit on lunchpad.
+                    var top_pixel = (parseInt(event_list[4]) * -1 + 500) + "px"
+                    img[0].style.top = top_pixel;
+                    img[0].style.left = "700px";
+                    img[0].style.visibility = "visible";
+
+                    img[1].style.visibility = "hidden";
+                }
+
+                if (event_list[0] >= 0) // Countdown in launch phase
+                {
+                    /* Display rocket with flame if it has fuel */
+                    if (event_list[1] > 0) {
+                        const img = document.querySelectorAll("img");
+                        img[1].style.position = "absolute";
+                        // Offset is 500px.
+                        var top_pixel = (parseInt(event_list[4]) * -1 + 500) + "px"
+                        img[1].style.top = top_pixel;
+                        img[1].style.left = "700px";
+                        img[1].style.visibility = "visible";
+
+                        img[0].style.visibility = "hidden";
+                    } else
+                    /* Display rocket with no flame. Out of fuel. */
+                    {
+                        const img = document.querySelectorAll("img");
+                        img[0].style.position = "absolute";
+                        // Offset is 500px.
+                        var top_pixel = (parseInt(event_list[4]) * -1 + 500) + "px"
+                        img[0].style.top = top_pixel;
+                        img[0].style.left = "700px";
+                        img[0].style.visibility = "visible";
+
+                        img[1].style.visibility = "hidden";
+                    }
+                }
+            } /*if*/
+        } /*function*/
+
+    conn.onclose =
+        function(event) {
+            document.getElementById("seconds").innerHTML = "End of mission"
+            if (event.code != 1000) {
+                document.getElementById("message").innerHTML = "Terminated with code: " + event.code
+            } /*if*/
+        } /*function*/
+        /* conn.onerror = Sould there be a function for connection error??? */
+} /*countdown*/
+
+function terminate() {
+    // TODO: Somehow stop the countdown() function ???
+}
+</script> 
+  <div id="container" style="width:100%;"> 
+   <div id="left" style="float:left; width:45%;">
+    <h2>WebSocket protocol</h2> 
+    <h3>via Asynchronous Server Gateway Interface ~ ASGI</h3> 
+    <strong> ...it's like Rocket Science...with music...</strong> 
+    <p>Run the accompanying <tt>server_4.py</tt> with a Uvicorn command like this: </p>
+    <blockquote> 
+     <tt>uvicorn --port 9370 server_4:rocket</tt> 
+    </blockquote> 
+    <form name="form"> 
+     <h3>Rocket Net Weight (Kilograms):</h3> 
+     <input type="RADIO" id="R_A_1" name="weight" value="100" checked="true" /> 
+     <label for="R_A_1">100 kg</label> 
+     <input type="RADIO" id="R_A_2" name="weight" value="200" /> 
+     <label for="R_A_2">200 kg</label> 
+     <input type="RADIO" id="R_A_3" name="weight" value="400" /> 
+     <label for="R_A_3">400 kg</label>
+     <br />
+     <br /> 
+     <h3>Engine Thrust (Newtons):</h3> 
+     <input type="RADIO" id="R_B_1" name="thrust" value="10000" checked="true" /> 
+     <label for="R_B_1">10000 N</label> 
+     <input type="RADIO" id="R_B_2" name="thrust" value="20000" /> 
+     <label for="R_B_2">20000 N</label> 
+     <input type="RADIO" id="R_B_3" name="thrust" value="40000" /> 
+     <label for="R_B_3"> 40000 N</label>
+     <br />
+     <br /> 
+     <p></p>
+     <h3>Initial Fuel Weight (Kilograms):</h3>
+     <p></p> 
+     <input type="RADIO" id="R_C_1" name="fuel" value="1000" checked="true" /> 
+     <label for="R_C_1">1000 Kg</label> 
+     <input type="RADIO" id="R_C_2" name="fuel" value="2000" /> 
+     <label for="R_C_2">2000 Kg</label> 
+     <input type="RADIO" id="R_C_3" name="fuel" value="4000" /> 
+     <label for="R_C_3"> 4000 Kg</label>
+     <br />
+     <br /> 
+     <p></p>
+     <h3>Burn Rate (Kilograms per second):</h3>
+     <p></p> 
+     <input type="RADIO" id="R_D_1" name="burn" value="100" checked="true" /> 
+     <label for="R_D_1">100 Kg/s</label> 
+     <input type="RADIO" id="R_D_2" name="burn" value="200" /> 
+     <label for="R_D_2">200 Kg/s</label> 
+     <input type="RADIO" id="R_D_3" name="burn" value="400" /> 
+     <label for="R_D_3"> 400 Kg/s</label>
+     <br />
+     <br /> 
+     <h3>Mission Control Important button No. 1: <input type="BUTTON" onclick="countdown()" value="Launch Rocket" name="button" style="font-size:20px; background-color:green; color:white; border-color:navy;" /> </h3> 
+    </form> 
+   </div> 
+   <!-- Right hand side panel with Countdown information --> 
+   <div id="right" style="float:right; width:45%;"> 
+    <h2>Launch Counter: <span id="seconds" <="" pan=""></span></h2> 
+    <p><progress id="progress" value="0" max="5"></progress></p> 
+    <p><span id="event_info"></span> </p>
+    <p><span id="message"></span> </p>
+   </div> 
+
+   <!-- Middle panel is empty. Reserving space for launch pad and rocket to travel in. --> 
+   <div id="middle" style="float:right; width:10%;"> 
+   </div> 
+  </div> 
+  <!-- the following are absolute positioned. Hence outside of previous divisions--> 
+  <!-- Place a launchpad under the rocket--> 
+  <div style="width:150px; height:40px; position:absolute; top:575px; left:650px; border:1px solid #000; background-color:grey; color:white;">
+   <br />
+   <center>
+    Launchpad
+   </center>
+  </div> 
+  <!-- Reserve two images for rocket with Flame ON and OFF.--> 
+  <img /> 
+  <img />  
+ </body>
+</html>
+
+
