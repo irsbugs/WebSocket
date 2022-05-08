@@ -44,6 +44,7 @@ The files `page_4.html` and `server_4.py` in conjunction with two music files `m
 Use a console terminal to launch the server with the command...
 ```
 uvicorn --port 9370 server_4:rocket
+```
 
 ## Notes
 
