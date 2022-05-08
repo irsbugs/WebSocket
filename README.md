@@ -71,4 +71,4 @@ The data scheme allows inclusion of small data items as "immediate" data, as if 
 
 The "data" scheme could include a binary blob, but this isn't the case. Thus the binary blob must be converted to ASCII via Base64 so it can become part of the URL.
 
-So I don't know of any way to pass a variable that is a binary blob to javascript/html audio or image. I assume it also applies to Images and Video. However as the client can access the web-server, then maybe its simplier to leave the audio/image/video files on the server and use a URL pointing to the server to get the file. If that's the case then I can't think of reasons to send a binary blob from the server to the client.
+There doesn't appear to be any way to pass a variable that is a binary blob to javascript/html audio or image. This also applies to Images and Video. However as the client can access the web-server, then maybe its simplier to leave the audio/image/video files on the server and use a URL pointing to the server to get the file. If that's the case then what reasons exist to send a binary blob from the server to the client?
